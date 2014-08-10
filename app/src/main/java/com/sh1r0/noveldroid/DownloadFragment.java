@@ -123,6 +123,8 @@ public class DownloadFragment extends Fragment {
 
 				btnDownload.setEnabled(false);
 
+				novel.addToShelf(isBookmarked);
+
 				File tempDir = new File(NovelUtils.TEMP_DIR);
 				if (!tempDir.exists()) {
 					tempDir.mkdirs();
@@ -260,7 +262,7 @@ public class DownloadFragment extends Fragment {
 	private void toggleBookmark() {
 		isBookmarked = !isBookmarked;
 
-		// TODO: remove or add book info entry in sqlite
+		novel.addToShelf(isBookmarked);
 
 		menu.findItem(R.id.menu_bookmark).setVisible(!isBookmarked);
 		menu.findItem(R.id.menu_unbookmark).setVisible(isBookmarked);
@@ -273,6 +275,7 @@ public class DownloadFragment extends Fragment {
 		etFromPage.setText(String.valueOf(novel.fromPage));
 		etToPage.setText(String.valueOf(novel.toPage));
 
+		this.isBookmarked = novel.isInShelf();
 		this.novelDownloader = DownloaderFactory.getDownloader(novel.siteID);
 		this.novel = novel;
 	}
