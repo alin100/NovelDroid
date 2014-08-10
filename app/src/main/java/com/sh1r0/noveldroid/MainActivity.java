@@ -22,6 +22,8 @@ import android.os.Message;
 import android.os.PowerManager;
 import android.preference.PreferenceManager;
 import android.support.v4.app.ActionBarDrawerToggle;
+import android.support.v4.app.FragmentManager;
+import android.support.v4.app.FragmentTransaction;
 import android.support.v4.app.NotificationCompat;
 import android.support.v4.view.GravityCompat;
 import android.support.v4.widget.DrawerLayout;
@@ -55,35 +57,23 @@ import android.widget.Toast;
 import com.dd.processbutton.iml.ActionProcessButton;
 import com.dd.processbutton.iml.SubmitProcessButton;
 import com.sh1r0.noveldroid.downloader.AbstractDownloader;
+import com.squareup.otto.Produce;
 
 import java.io.File;
 import java.lang.reflect.Field;
 
 public class MainActivity extends ActionBarActivity implements AdapterView.OnItemClickListener {
-	private static final int SUCCESS = 0x10000;
-	private static final int PREPARING = 0x10001;
-	private static final int FAIL = 0x10002;
 	private static final int API_VERSION = Build.VERSION.SDK_INT;
 
 	private int width;
 	private EditText etID;
-	private EditText etNovelName;
-	private EditText etAuthor;
-	private EditText etFromPage;
-	private EditText etToPage;
 	private ActionProcessButton btnAnalyze;
-	private SubmitProcessButton btnDownload;
 	private Spinner spnDomain;
-	private ProgressDialog progressDialog;
-	private SharedPreferences prefs;
-	private String filename;
-	private String downDirPath;
-	private NotificationManager mNotificationManager;
 	private DrawerLayout mDrawerLayout;
 	private ListView mDrawerList;
 	private ActionBarDrawerToggle mDrawerToggle;
+	private boolean isDrawerOpen = false;
 	private Novel novel;
-	private AbstractDownloader novelDownloader;
 
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
@@ -92,6 +82,24 @@ public class MainActivity extends ActionBarActivity implements AdapterView.OnIte
 
 		width = getScreenWidth();
 		PreferenceManager.setDefaultValues(this, R.xml.settings, false);
+
+		spnDomain = (Spinner) findViewById(R.id.spn_doamin);
+		ArrayAdapter<String> spnAdapter = new ArrayAdapter<String>(this,
+			android.R.layout.simple_spinner_item, this.getResources().getStringArray(R.array.domain)
+		);
+		spnAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
+		spnDomain.setAdapter(spnAdapter);
+		spnDomain.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
+			@Override
+			public void onItemSelected(AdapterView<?> adapterView, View view, int i, long l) {
+				btnAnalyze.setProgress(0);
+				btnAnalyze.setEnabled(true);
+			}
+
+			@Override
+			public void onNothingSelected(AdapterView<?> adapterView) {
+			}
+		});
 
 		etID = (EditText) findViewById(R.id.et_id);
 		etID.addTextChangedListener(new TextWatcher() {
@@ -110,44 +118,28 @@ public class MainActivity extends ActionBarActivity implements AdapterView.OnIte
 			}
 		});
 
-		etNovelName = (EditText) findViewById(R.id.et_novel_name);
-		etAuthor = (EditText) findViewById(R.id.et_author);
-		etFromPage = (EditText) findViewById(R.id.et_from_page);
-		etToPage = (EditText) findViewById(R.id.et_to_page);
 		btnAnalyze = (ActionProcessButton) findViewById(R.id.btn_analyze);
-		btnDownload = (SubmitProcessButton) findViewById(R.id.btn_download);
-		spnDomain = (Spinner) findViewById(R.id.spn_doamin);
-
-		ArrayAdapter<String> spnAdapter = new ArrayAdapter<String>(this,
-			android.R.layout.simple_spinner_item, this.getResources().getStringArray(R.array.domain)
-		);
-		spnAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
-		spnDomain.setAdapter(spnAdapter);
-
 		btnAnalyze.setMode(ActionProcessButton.Mode.ENDLESS);
 		btnAnalyze.setOnClickListener(new OnClickListener() {
 			@Override
 			public void onClick(View v) {
-				btnAnalyze.setEnabled(false);
-				btnAnalyze.setProgress(1);
-				btnDownload.setEnabled(false);
-
 				if (!isNetworkConnected()) {
 					Toast.makeText(getApplicationContext(), R.string.no_connection_tooltip, Toast.LENGTH_SHORT).show();
 					return;
 				}
 
-				String tid = etID.getText().toString();
-				if (tid.isEmpty()) {
+				btnAnalyze.setEnabled(false);
+				String bookID = etID.getText().toString();
+				if (bookID.isEmpty()) {
 					etID.setError(getResources().getString(R.string.novel_id_tooltip));
 					btnAnalyze.setProgress(-1);
 					return;
 				}
 
+				btnAnalyze.setProgress(1);
+
 				try {
-					novelDownloader = DownloaderFactory.getDownloader(spnDomain
-						.getSelectedItemPosition());
-					if ((novel = novelDownloader.analyze(tid)) == null) {
+					if ((novel = DownloaderFactory.analyze(spnDomain.getSelectedItemPosition(), bookID)) == null) {
 						throw new Exception();
 					}
 				} catch (Exception e) {
@@ -157,97 +149,14 @@ public class MainActivity extends ActionBarActivity implements AdapterView.OnIte
 					return;
 				}
 
-				etAuthor.setText(novel.author);
-				etNovelName.setText(novel.name);
-				etFromPage.setText(String.valueOf(novel.fromPage));
-				etToPage.setText(String.valueOf(novel.toPage));
+				FragmentManager fragmentManager = getSupportFragmentManager();
+				FragmentTransaction fragmentTransaction = fragmentManager.beginTransaction();
+				fragmentTransaction.replace(R.id.main_layout, new DownloadFragment());
+				fragmentTransaction.addToBackStack(null);
+				fragmentTransaction.commit();
 
-				btnAnalyze.setProgress(100);
+				btnAnalyze.setProgress(0);
 				btnAnalyze.setEnabled(true);
-				btnDownload.setEnabled(true);
-			}
-		});
-
-		btnDownload.setOnClickListener(new OnClickListener() {
-			@Override
-			public void onClick(View v) {
-				novel.name = etNovelName.getText().toString();
-				novel.author = etAuthor.getText().toString();
-
-				if (novel.name.isEmpty()) {
-					AlertDialog.Builder dialog = new AlertDialog.Builder(MainActivity.this);
-					dialog.setIcon(android.R.drawable.ic_dialog_alert);
-					dialog.setTitle(R.string.error);
-					dialog.setMessage(R.string.empty_name_dialog_msg);
-					dialog.setCancelable(false);
-					dialog.setPositiveButton(R.string.ok,
-						new DialogInterface.OnClickListener() {
-							@Override
-							public void onClick(DialogInterface dialog, int which) {
-							}
-						}
-					);
-					dialog.show();
-					return;
-				}
-
-				try {
-					novel.fromPage = Integer.parseInt(etFromPage.getText().toString());
-					novel.toPage = Integer.parseInt(etToPage.getText().toString());
-					if (novel.fromPage < 1 || novel.fromPage > novel.toPage
-						|| novel.toPage > novel.lastPage) {
-						throw new NumberFormatException();
-					}
-				} catch (NumberFormatException e) {
-					AlertDialog.Builder dialog = new AlertDialog.Builder(MainActivity.this);
-					dialog.setIcon(android.R.drawable.ic_dialog_alert);
-					dialog.setTitle(R.string.error);
-					dialog.setMessage(R.string.wrong_page_dialog_msg);
-					dialog.setCancelable(false);
-					dialog.setPositiveButton(R.string.ok,
-						new DialogInterface.OnClickListener() {
-							@Override
-							public void onClick(DialogInterface dialog, int which) {
-							}
-						}
-					);
-					dialog.show();
-					return;
-				}
-
-				btnDownload.setEnabled(false);
-
-				File tempDir = new File(NovelUtils.TEMP_DIR);
-				if (!tempDir.exists()) {
-					tempDir.mkdirs();
-				}
-
-				new Thread(new Runnable() {
-					@SuppressLint("Wakelock")
-					public void run() {
-						PowerManager pm = (PowerManager) getSystemService(Context.POWER_SERVICE);
-						PowerManager.WakeLock wl = pm.newWakeLock(PowerManager.PARTIAL_WAKE_LOCK, "btnDownload");
-
-						wl.acquire();
-						try {
-							novelDownloader.download(progressHandler);
-
-							downDirPath = prefs.getString("down_dir", NovelUtils.APP_DIR);
-							mHandler.sendEmptyMessage(PREPARING);
-							filename = novelDownloader.process(downDirPath,
-								Integer.parseInt(prefs.getString("naming_rule", "0")),
-								prefs.getString("encoding", "UTF-8"));
-							if (filename == null) {
-								throw new Exception();
-							}
-							mHandler.sendEmptyMessage(SUCCESS);
-						} catch (Exception e) {
-							e.printStackTrace();
-							mHandler.sendEmptyMessage(FAIL);
-						}
-						wl.release();
-					}
-				}).start();
 			}
 		});
 
@@ -271,6 +180,17 @@ public class MainActivity extends ActionBarActivity implements AdapterView.OnIte
 			public void onDrawerOpened(View drawerView) {
 				supportInvalidateOptionsMenu();
 			}
+
+			@Override
+			public void onDrawerSlide(View drawerView, float slideOffset) {
+				if (slideOffset > .1 && !isDrawerOpen){
+					onDrawerOpened(drawerView);
+					isDrawerOpen = true;
+				} else if(slideOffset < .1 && isDrawerOpen) {
+					onDrawerClosed(drawerView);
+					isDrawerOpen = false;
+				}
+			}
 		};
 		mDrawerLayout.setDrawerListener(mDrawerToggle);
 		mDrawerLayout.setDrawerShadow(R.drawable.drawer_shadow, GravityCompat.START);
@@ -290,6 +210,11 @@ public class MainActivity extends ActionBarActivity implements AdapterView.OnIte
 		ActionBar actionBar = getSupportActionBar();
 		actionBar.setDisplayHomeAsUpEnabled(true);
 		actionBar.setHomeButtonEnabled(true);
+	}
+
+	@Produce
+	public Novel produceAnalyzedNovelInfo() {
+		return this.novel;
 	}
 
 	@Override
@@ -319,9 +244,11 @@ public class MainActivity extends ActionBarActivity implements AdapterView.OnIte
 	}
 
 	@Override
-	public boolean onPrepareOptionsMenu(Menu menu) {
-		boolean drawerOpen = mDrawerLayout.isDrawerOpen(mDrawerList);
-		menu.findItem(R.id.menu_search).setVisible(!drawerOpen);
+	 public boolean onPrepareOptionsMenu(Menu menu) {
+		MenuItem item;
+		if ((item = menu.findItem(R.id.menu_search)) != null) {
+			item.setVisible(!isDrawerOpen);
+		}
 		return super.onPrepareOptionsMenu(menu);
 	}
 
@@ -350,78 +277,16 @@ public class MainActivity extends ActionBarActivity implements AdapterView.OnIte
 		return super.onOptionsItemSelected(item);
 	}
 
-	@SuppressLint("HandlerLeak")
-	private Handler mHandler = new Handler() {
-		@Override
-		public void handleMessage(Message msg) {
-			switch (msg.what) {
-				case PREPARING:
-					progressDialog = ProgressDialog.show(MainActivity.this, getResources()
-							.getString(R.string.progress_dialog_title),
-						getResources().getString(R.string.progress_dialog_msg)
-					);
-					break;
-
-				case SUCCESS:
-					btnDownload.setProgress(0);
-					btnDownload.setEnabled(true);
-					progressDialog.dismiss();
-					Toast.makeText(getApplicationContext(), R.string.download_success_tooltip,
-						Toast.LENGTH_LONG).show();
-
-					Intent intent = new Intent(Intent.ACTION_VIEW);
-					Uri uri = Uri.fromFile(new File(downDirPath + filename));
-					intent.setDataAndType(uri, "text/plain");
-					String ticker = filename + " " + getString(R.string.novel_saved_tooltip);
-
-					NotificationCompat.Builder mBuilder = new NotificationCompat.Builder(
-						MainActivity.this).setContentTitle(getString(R.string.app_name))
-						.setContentText(downDirPath + filename).setTicker(ticker)
-						.setSmallIcon(android.R.drawable.stat_sys_download_done)
-						.setAutoCancel(true);
-					PendingIntent contentIntent = PendingIntent.getActivity(MainActivity.this, 0,
-						intent, 0);
-					mBuilder.setContentIntent(contentIntent);
-					mNotificationManager = (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
-					mNotificationManager.notify(0, mBuilder.build());
-					break;
-
-				case FAIL:
-					btnDownload.setProgress(0);
-					btnDownload.setEnabled(true);
-					if (progressDialog != null && progressDialog.isShowing())
-						progressDialog.dismiss();
-					Toast.makeText(getApplicationContext(), R.string.download_fail_tooltip, Toast.LENGTH_SHORT).show();
-					break;
-			}
-		}
-	};
-
-	@SuppressLint("HandlerLeak")
-	public Handler progressHandler = new Handler() {
-		int completeTaskNum;
-		int totalTaskNum;
-		int progress;
-
-		@Override
-		public void handleMessage(Message msg) {
-			if (msg.what < 0) {
-				completeTaskNum = 0;
-				totalTaskNum = msg.arg1;
-				btnDownload.setProgress(0);
-				return;
-			}
-
-			completeTaskNum += msg.what;
-			progress = (int) completeTaskNum * 100 / totalTaskNum;
-			btnDownload.setProgress(progress);
-		}
-	};
-
 	@Override
 	protected void onResume() {
-		prefs = PreferenceManager.getDefaultSharedPreferences(this);
 		super.onResume();
+		ApplicationController.getBus().register(this);
+	}
+
+	@Override
+	protected void onPause() {
+		super.onPause();
+		ApplicationController.getBus().unregister(this);
 	}
 
 	@Override
@@ -447,7 +312,7 @@ public class MainActivity extends ActionBarActivity implements AdapterView.OnIte
 	private boolean isNetworkConnected() {
 		ConnectivityManager cm = (ConnectivityManager) getSystemService(Context.CONNECTIVITY_SERVICE);
 		NetworkInfo activeNetworkInfo = cm.getActiveNetworkInfo();
-		return activeNetworkInfo != null && activeNetworkInfo.isConnectedOrConnecting();
+		return activeNetworkInfo != null && activeNetworkInfo.isConnected();
 	}
 
 	private void closeKeyboard() {

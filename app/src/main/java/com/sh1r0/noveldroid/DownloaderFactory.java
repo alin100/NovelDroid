@@ -21,4 +21,8 @@ public class DownloaderFactory {
 				return null;
 		}
 	}
+
+	public static Novel analyze(int siteID, String bookID) throws Exception {
+		return getDownloader(siteID).analyze(bookID);
+	}
 }

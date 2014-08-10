@@ -23,7 +23,7 @@ public class NovelUtils {
 	private NovelUtils() {
 		S2T_MAP = new HashMap<Character, Character>();
 		try {
-			InputStream input = ApplicationContextProvider.getContext().getAssets().open("table_s2t.txt");
+			InputStream input = ApplicationController.getContext().getAssets().open("table_s2t.txt");
 			byte[] buffer = new byte[input.available()];
 			input.read(buffer);
 			input.close();

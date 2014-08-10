@@ -6,12 +6,14 @@
     android:layout_height="match_parent">
 
 	<RelativeLayout
+        android:id="@+id/main_layout"
 	    android:layout_width="match_parent"
 	    android:layout_height="match_parent"
 	    android:paddingBottom="@dimen/activity_vertical_margin"
 	    android:paddingLeft="@dimen/activity_horizontal_margin"
 	    android:paddingRight="@dimen/activity_horizontal_margin"
-	    android:paddingTop="@dimen/activity_vertical_margin" >
+	    android:paddingTop="@dimen/activity_vertical_margin"
+        android:background="@android:color/background_light">
 
 	    <LinearLayout
 	        android:id="@+id/id_info"
@@ -53,100 +55,6 @@
             android:layout_centerHorizontal="true"
             android:layout_marginTop="10dp"
             android:layout_marginBottom="10dp" />
-
-	    <LinearLayout
-	        android:id="@+id/novel_name_info"
-	        android:layout_width="fill_parent"
-	        android:layout_height="wrap_content"
-            android:orientation="horizontal"
-            android:layout_below="@id/btn_analyze"
-            android:layout_alignParentRight="true"
-            android:layout_alignParentEnd="true">
-
-	        <TextView
-	            android:id="@+id/tv_novel_name"
-	            android:layout_width="wrap_content"
-	            android:layout_height="wrap_content"
-	            android:text="@string/novel_name" />
-
-            <EditText
-	            android:id="@+id/et_novel_name"
-	            android:layout_width="0dp"
-	            android:layout_height="wrap_content"
-	            android:layout_weight="1"
-	            android:inputType="text" />
-	    </LinearLayout>
-
-	    <LinearLayout
-	        android:id="@+id/author_info"
-	        android:layout_width="fill_parent"
-	        android:layout_height="wrap_content"
-	        android:layout_below="@id/novel_name_info"
-	        android:orientation="horizontal" >
-
-	        <TextView
-	            android:id="@+id/tv_author"
-	            android:layout_width="wrap_content"
-	            android:layout_height="wrap_content"
-	            android:text="@string/author" />
-
-	        <EditText
-	            android:id="@+id/et_author"
-	            android:layout_width="0dp"
-	            android:layout_height="wrap_content"
-	            android:layout_weight="1"
-	            android:hint="@string/author_hint"
-	            android:inputType="text" />
-	    </LinearLayout>
-
-	    <LinearLayout
-	        android:id="@+id/page_info"
-	        android:layout_width="fill_parent"
-	        android:layout_height="wrap_content"
-	        android:layout_below="@id/author_info"
-	        android:orientation="horizontal" >
-
-	        <TextView
-	            android:id="@+id/tv_from_page"
-	            android:layout_width="wrap_content"
-	            android:layout_height="wrap_content"
-	            android:text="@string/from_page" />
-
-	        <EditText
-	            android:id="@+id/et_from_page"
-	            android:layout_width="0dp"
-	            android:layout_height="wrap_content"
-	            android:layout_weight="1"
-	            android:inputType="number" />
-
-	        <TextView
-	            android:id="@+id/tv_to_page"
-	            android:layout_width="wrap_content"
-	            android:layout_height="wrap_content"
-	            android:text="@string/to_page" />
-
-	        <EditText
-	            android:id="@+id/et_to_page"
-	            android:layout_width="0dp"
-	            android:layout_height="wrap_content"
-	            android:layout_weight="1"
-	            android:inputType="number" />
-	    </LinearLayout>
-
-        <com.dd.processbutton.iml.SubmitProcessButton
-            android:id="@+id/btn_download"
-            android:enabled="false"
-            android:layout_width="fill_parent"
-            android:layout_height="wrap_content"
-            android:text="@string/download"
-            android:textColor="@android:color/white"
-            android:textSize="18sp"
-            android:layout_below="@id/page_info"
-            android:layout_centerHorizontal="true"
-            android:layout_marginTop="20dp"
-            custom:pb_textComplete="@string/done"
-            custom:pb_textProgress="@string/downloading_tooltip"
-            custom:pb_colorProgress="@color/holo_red_light"/>
 
     </RelativeLayout>
 

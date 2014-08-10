@@ -79,7 +79,7 @@ public class SettingsFragment extends PreferenceCompatFragment implements
 		downDir.setOnPreferenceClickListener(new OnPreferenceClickListener() {
 			@Override
 			public boolean onPreferenceClick(Preference preference) {
-				Intent intent = new Intent(ApplicationContextProvider.getContext(), ExFilePickerActivity.class);
+				Intent intent = new Intent(ApplicationController.getContext(), ExFilePickerActivity.class);
 				intent.putExtra(ExFilePickerActivity.SET_START_DIRECTORY, prefs.getString(KEY_DOWN_DIR, NovelUtils.APP_DIR));
 				startActivityForResult(intent, EX_FILE_PICKER_RESULT);
 				return true;

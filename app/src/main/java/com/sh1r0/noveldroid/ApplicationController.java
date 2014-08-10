@@ -3,8 +3,11 @@ package com.sh1r0.noveldroid;
 import android.app.Application;
 import android.content.Context;
 
-public class ApplicationContextProvider extends Application {
+import com.squareup.otto.Bus;
+
+public class ApplicationController extends Application {
 	private static Context appContext;
+	private static final Bus BUS = new Bus();
 
 	@Override
 	public void onCreate() {
@@ -14,5 +17,9 @@ public class ApplicationContextProvider extends Application {
 
 	public static Context getContext() {
 		return appContext;
+	}
+
+	public static Bus getBus() {
+		return BUS;
 	}
 }

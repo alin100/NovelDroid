@@ -1,0 +1,108 @@
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    xmlns:custom="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@android:color/background_light"
+    tools:context="com.sh1r0.noveldroid.DownloadFragment">
+
+    <RelativeLayout
+        android:layout_width="match_parent"
+        android:layout_height="match_parent">
+
+        <LinearLayout
+            android:id="@+id/novel_name_info"
+            android:layout_width="fill_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:layout_below="@id/btn_analyze"
+            android:layout_alignParentRight="true"
+            android:layout_alignParentEnd="true">
+
+            <TextView
+                android:id="@+id/tv_novel_name"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="@string/novel_name" />
+
+            <EditText
+                android:id="@+id/et_novel_name"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:inputType="text" />
+        </LinearLayout>
+
+        <LinearLayout
+            android:id="@+id/author_info"
+            android:layout_width="fill_parent"
+            android:layout_height="wrap_content"
+            android:layout_below="@id/novel_name_info"
+            android:orientation="horizontal" >
+
+            <TextView
+                android:id="@+id/tv_author"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="@string/author" />
+
+            <EditText
+                android:id="@+id/et_author"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:hint="@string/author_hint"
+                android:inputType="text" />
+        </LinearLayout>
+
+        <LinearLayout
+            android:id="@+id/page_info"
+            android:layout_width="fill_parent"
+            android:layout_height="wrap_content"
+            android:layout_below="@id/author_info"
+            android:orientation="horizontal" >
+
+            <TextView
+                android:id="@+id/tv_from_page"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="@string/from_page" />
+
+            <EditText
+                android:id="@+id/et_from_page"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:inputType="number" />
+
+            <TextView
+                android:id="@+id/tv_to_page"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="@string/to_page" />
+
+            <EditText
+                android:id="@+id/et_to_page"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:inputType="number" />
+        </LinearLayout>
+
+        <com.dd.processbutton.iml.SubmitProcessButton
+            android:id="@+id/btn_download"
+            android:layout_width="fill_parent"
+            android:layout_height="wrap_content"
+            android:text="@string/download"
+            android:textColor="@android:color/white"
+            android:textSize="18sp"
+            android:layout_below="@id/page_info"
+            android:layout_centerHorizontal="true"
+            android:layout_marginTop="20dp"
+            custom:pb_textComplete="@string/done"
+            custom:pb_textProgress="@string/downloading_tooltip"
+            custom:pb_colorProgress="@color/holo_red_light" />
+
+    </RelativeLayout>
+
+</FrameLayout>
