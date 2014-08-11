@@ -3,28 +3,18 @@ package com.sh1r0.noveldroid;
 import android.annotation.SuppressLint;
 import android.annotation.TargetApi;
 import android.app.AlertDialog;
-import android.app.NotificationManager;
-import android.app.PendingIntent;
-import android.app.ProgressDialog;
 import android.content.Context;
-import android.content.DialogInterface;
 import android.content.Intent;
-import android.content.SharedPreferences;
 import android.content.res.Configuration;
 import android.graphics.Point;
 import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
-import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
-import android.os.Handler;
-import android.os.Message;
-import android.os.PowerManager;
 import android.preference.PreferenceManager;
 import android.support.v4.app.ActionBarDrawerToggle;
 import android.support.v4.app.FragmentManager;
 import android.support.v4.app.FragmentTransaction;
-import android.support.v4.app.NotificationCompat;
 import android.support.v4.view.GravityCompat;
 import android.support.v4.widget.DrawerLayout;
 import android.support.v4.widget.ViewDragHelper;
@@ -55,14 +45,13 @@ import android.widget.Spinner;
 import android.widget.Toast;
 
 import com.dd.processbutton.iml.ActionProcessButton;
-import com.dd.processbutton.iml.SubmitProcessButton;
-import com.sh1r0.noveldroid.downloader.AbstractDownloader;
 import com.squareup.otto.Produce;
 
-import java.io.File;
 import java.lang.reflect.Field;
 
-public class MainActivity extends ActionBarActivity implements AdapterView.OnItemClickListener {
+public class MainActivity extends ActionBarActivity
+		implements AdapterView.OnItemClickListener, ShelfFragment.OnShelfFragmentListener {
+
 	private static final int API_VERSION = Build.VERSION.SDK_INT;
 
 	private int width;
@@ -85,7 +74,7 @@ public class MainActivity extends ActionBarActivity implements AdapterView.OnIte
 
 		spnDomain = (Spinner) findViewById(R.id.spn_doamin);
 		ArrayAdapter<String> spnAdapter = new ArrayAdapter<String>(this,
-			android.R.layout.simple_spinner_item, this.getResources().getStringArray(R.array.domain)
+				android.R.layout.simple_spinner_item, this.getResources().getStringArray(R.array.domain)
 		);
 		spnAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
 		spnDomain.setAdapter(spnAdapter);
@@ -161,9 +150,10 @@ public class MainActivity extends ActionBarActivity implements AdapterView.OnIte
 		});
 
 		DrawerItem[] menu = new DrawerItem[]{
-			DrawerItem.create(0, R.string.search, R.drawable.ic_action_search, this),
-			DrawerItem.create(1, R.string.settings, R.drawable.ic_action_settings, this),
-			DrawerItem.create(2, R.string.quit, R.drawable.ic_action_quit, this)};
+				DrawerItem.create(0, R.string.search, R.drawable.ic_action_search, this),
+				DrawerItem.create(1, R.string.settings, R.drawable.ic_action_settings, this),
+				DrawerItem.create(2, R.string.shelf, R.drawable.ic_fa_book, this),
+				DrawerItem.create(3, R.string.quit, R.drawable.ic_action_quit, this)};
 
 		mDrawerLayout = (DrawerLayout) findViewById(R.id.drawer_layout);
 		mDrawerList = (ListView) findViewById(R.id.left_drawer);
@@ -183,10 +173,10 @@ public class MainActivity extends ActionBarActivity implements AdapterView.OnIte
 
 			@Override
 			public void onDrawerSlide(View drawerView, float slideOffset) {
-				if (slideOffset > .1 && !isDrawerOpen){
+				if (slideOffset > .1 && !isDrawerOpen) {
 					onDrawerOpened(drawerView);
 					isDrawerOpen = true;
-				} else if(slideOffset < .1 && isDrawerOpen) {
+				} else if (slideOffset < .1 && isDrawerOpen) {
 					onDrawerClosed(drawerView);
 					isDrawerOpen = false;
 				}
@@ -228,7 +218,14 @@ public class MainActivity extends ActionBarActivity implements AdapterView.OnIte
 			case 1: // settings
 				startActivity(new Intent(this, SettingsActivity.class));
 				break;
-			case 2: // exit
+			case 2: // shelf
+				FragmentManager fragmentManager = getSupportFragmentManager();
+				FragmentTransaction fragmentTransaction = fragmentManager.beginTransaction();
+				fragmentTransaction.replace(R.id.main_layout, new ShelfFragment());
+				fragmentTransaction.addToBackStack(null);
+				fragmentTransaction.commit();
+				break;
+			case 3: // exit
 				finish();
 				break;
 			default:
@@ -244,7 +241,7 @@ public class MainActivity extends ActionBarActivity implements AdapterView.OnIte
 	}
 
 	@Override
-	 public boolean onPrepareOptionsMenu(Menu menu) {
+	public boolean onPrepareOptionsMenu(Menu menu) {
 		MenuItem item;
 		if ((item = menu.findItem(R.id.menu_search)) != null) {
 			item.setVisible(!isDrawerOpen);
@@ -302,7 +299,7 @@ public class MainActivity extends ActionBarActivity implements AdapterView.OnIte
 			float y = event.getRawY() + w.getTop() - scrcoords[1];
 
 			if (event.getAction() == MotionEvent.ACTION_UP
-				&& (x < w.getLeft() || x >= w.getRight() || y < w.getTop() || y > w.getBottom())) {
+					&& (x < w.getLeft() || x >= w.getRight() || y < w.getTop() || y > w.getBottom())) {
 				closeKeyboard();
 			}
 		}
@@ -339,7 +336,7 @@ public class MainActivity extends ActionBarActivity implements AdapterView.OnIte
 		LayoutInflater factory = LayoutInflater.from(this);
 		final View searchDialogView = factory.inflate(R.layout.search_dialog, null);
 		final AlertDialog searchDialog = new AlertDialog.Builder(this).setTitle(R.string.search)
-			.setNegativeButton(R.string.close, null).setCancelable(false).create();
+				.setNegativeButton(R.string.close, null).setCancelable(false).create();
 		searchDialog.setView(searchDialogView);
 
 		final WebView wv = (WebView) searchDialogView.findViewById(R.id.wv_search);
@@ -372,5 +369,15 @@ public class MainActivity extends ActionBarActivity implements AdapterView.OnIte
 		lp.copyFrom(searchDialog.getWindow().getAttributes());
 		lp.width = width;
 		searchDialog.getWindow().setAttributes(lp);
+	}
+
+	@Override
+	public void onShelfItemClick(Novel novel) {
+		this.novel = novel;
+		FragmentManager fragmentManager = getSupportFragmentManager();
+		FragmentTransaction fragmentTransaction = fragmentManager.beginTransaction();
+		fragmentTransaction.replace(R.id.main_layout, new DownloadFragment());
+		fragmentTransaction.addToBackStack(null);
+		fragmentTransaction.commit();
 	}
 }

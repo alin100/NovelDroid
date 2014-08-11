@@ -9,6 +9,8 @@ An android app for extracting novel contents from forum posts
 ###1.4.2
 * added bookmark action icons from [Android-Action-Bar-Icons](https://github.com/svenkapudija/Android-Action-Bar-Icons/)
 * introduced jsoup to parse html
+* introduced Otto event bus
+* added shelf
 
 ###1.4.1
 * fix: cklol html structure changes

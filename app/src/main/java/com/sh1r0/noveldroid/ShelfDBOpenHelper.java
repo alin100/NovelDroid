@@ -4,12 +4,12 @@ import android.content.Context;
 import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteOpenHelper;
 
-public class ShelfOpenHelper extends SQLiteOpenHelper {
+public class ShelfDBOpenHelper extends SQLiteOpenHelper {
 	private static final String DB_NAME = "shelf.db";
 	private static final int DB_VER = 1;
 	public static final String TABLE_NAME = "NDShelf";
 
-	public ShelfOpenHelper(Context context) {
+	public ShelfDBOpenHelper(Context context) {
 		super(context, DB_NAME, null, DB_VER);
 	}
 

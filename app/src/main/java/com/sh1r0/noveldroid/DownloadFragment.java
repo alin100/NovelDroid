@@ -123,7 +123,7 @@ public class DownloadFragment extends Fragment {
 
 				btnDownload.setEnabled(false);
 
-				novel.addToShelf(isBookmarked);
+				novel.putOnShelf(isBookmarked);
 
 				File tempDir = new File(NovelUtils.TEMP_DIR);
 				if (!tempDir.exists()) {
@@ -262,7 +262,7 @@ public class DownloadFragment extends Fragment {
 	private void toggleBookmark() {
 		isBookmarked = !isBookmarked;
 
-		novel.addToShelf(isBookmarked);
+		novel.putOnShelf(isBookmarked);
 
 		menu.findItem(R.id.menu_bookmark).setVisible(!isBookmarked);
 		menu.findItem(R.id.menu_unbookmark).setVisible(isBookmarked);
@@ -275,7 +275,7 @@ public class DownloadFragment extends Fragment {
 		etFromPage.setText(String.valueOf(novel.fromPage));
 		etToPage.setText(String.valueOf(novel.toPage));
 
-		this.isBookmarked = novel.isInShelf();
+		this.isBookmarked = novel.isOnShelf();
 		this.novelDownloader = DownloaderFactory.getDownloader(novel.siteID);
 		this.novel = novel;
 	}
