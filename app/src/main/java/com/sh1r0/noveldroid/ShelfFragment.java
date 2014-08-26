@@ -24,6 +24,7 @@ public class ShelfFragment extends ListFragment {
 	@Override
 	public void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
+		setHasOptionsMenu(true);
 
 		adapter = new NovelCursorAdapter(getActivity(), Novel.getAll());
 		setListAdapter(adapter);
@@ -90,6 +91,11 @@ public class ShelfFragment extends ListFragment {
 	@Override
 	public void onCreateOptionsMenu(Menu menu, MenuInflater inflater) {
 		menu.removeItem(R.id.menu_search);
+	}
+
+	@Override
+	public void onPrepareOptionsMenu(Menu menu) {
+		super.onPrepareOptionsMenu(menu);
 	}
 
 	public interface OnShelfFragmentListener {
