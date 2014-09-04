@@ -3,3 +3,4 @@
 /.idea
 .DS_Store
 /build
+app/src/main/java/com/sh1r0/noveldroid/ParseAppKey.java
